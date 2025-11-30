@@ -3,19 +3,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { LogOut, Sun, Moon, LayoutGrid, BrainCircuit, User, PlusCircle, Menu, X } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   const handleLogout = () => {
     logout();
     navigate('/');
   };
-
   const NavLink: React.FC<{ to: string; icon: React.ReactNode; label: string }> = ({ to, icon, label }) => {
     const isActive = location.pathname === to;
     return (
@@ -35,7 +32,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </Link>
     );
   };
-
   const MobileNavLink: React.FC<{ to: string; icon: React.ReactNode; label: string }> = ({ to, icon, label }) => {
     const isActive = location.pathname === to;
     return (
@@ -54,7 +50,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </Link>
     );
   };
-
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-white dark:bg-black transition-colors duration-300">
@@ -84,10 +79,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </div>
     );
   }
-
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-hidden">
-      
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/90 dark:bg-black/90 backdrop-blur-xl border-b border-slate-100 dark:border-white/5 flex items-center justify-between px-4 z-[60]">
         <div className="flex items-center gap-2">
            <div className="bg-sky-500 p-1.5 rounded-lg">
@@ -102,7 +95,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
-
       <aside className={`
         fixed inset-y-0 left-0 z-[70] w-72 bg-white dark:bg-black border-r border-slate-100 dark:border-white/5 flex flex-col transition-transform duration-300 ease-in-out overflow-y-auto
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -121,12 +113,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <X className="w-5 h-5" />
           </button>
         </div>
-
         <div className="px-4 space-y-2 flex-1">
           <NavLink to="/dashboard" icon={<LayoutGrid className="w-5 h-5" />} label="Dashboard" />
           <NavLink to="/setup" icon={<PlusCircle className="w-5 h-5" />} label="New Simulation" />
         </div>
-
         <div className="p-6 border-t border-slate-50 dark:border-white/5">
           <div className="flex items-center gap-3 mb-6 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
             <div className="w-10 h-10 rounded-xl bg-white dark:bg-black flex items-center justify-center text-sky-500 shadow-sm">
@@ -137,7 +127,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{useAuth().role || 'Guest'}</p>
             </div>
           </div>
-          
           <div className="flex gap-2">
             <button
                 onClick={toggleTheme}
@@ -154,20 +143,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
         </div>
       </aside>
-
       {isMobileMenuOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-[65] lg:hidden backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
-
       <main className="flex-1 min-w-0 h-full overflow-y-auto relative scroll-smooth pb-24 lg:pb-0 pt-16 lg:pt-0">
         <div className="max-w-[1600px] mx-auto p-4 md:p-8 lg:p-10 animate-fade-in">
           {children}
         </div>
       </main>
-
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-black/90 backdrop-blur-xl border-t border-slate-100 dark:border-white/5 pb-safe z-50">
         <div className="flex items-center justify-around px-2">
             <MobileNavLink to="/dashboard" icon={<LayoutGrid className="w-6 h-6" />} label="Home" />
@@ -179,9 +165,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <MobileNavLink to="/" icon={<BrainCircuit className="w-6 h-6" />} label="Landing" />
         </div>
       </div>
-
     </div>
   );
 };
-
 export default Layout;

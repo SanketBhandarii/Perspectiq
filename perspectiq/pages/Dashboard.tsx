@@ -4,18 +4,15 @@ import { api } from '../services/api';
 import { SessionHistoryItem } from '../types';
 import { Plus, Trash2, ArrowRight, MessageCircle, History, FileText, Search } from 'lucide-react';
 import Modal from '../components/Modal';
-
 const Dashboard: React.FC = () => {
   const [sessions, setSessions] = useState<SessionHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
   const navigate = useNavigate();
-
   useEffect(() => {
     fetchHistory();
   }, []);
-
   const fetchHistory = async () => {
     try {
       const res = await api.chat.getHistory();
@@ -26,17 +23,14 @@ const Dashboard: React.FC = () => {
       setLoading(false);
     }
   };
-
   const confirmDelete = (sessionId: number, e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
       setSessionToDelete(sessionId);
       setDeleteModalOpen(true);
   };
-
   const handleExecuteDelete = async () => {
     if (!sessionToDelete) return;
-
     try {
       await api.chat.deleteSession(sessionToDelete);
       setSessions(prev => prev.filter(s => s.id !== sessionToDelete));
@@ -46,13 +40,10 @@ const Dashboard: React.FC = () => {
       console.error("Failed to delete", err);
     }
   };
-
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-
   return (
     <div className="h-full flex flex-col lg:flex-row gap-8">
-      
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
@@ -66,7 +57,6 @@ const Dashboard: React.FC = () => {
       >
         <p>This action cannot be undone. This will permanently delete the chat history and its evaluation.</p>
       </Modal>
-
       <div className="lg:w-1/3 flex flex-col lg:h-full h-auto min-h-[300px] lg:min-h-0">
         <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -77,7 +67,6 @@ const Dashboard: React.FC = () => {
                 {sessions.length} Sessions
             </span>
         </div>
-
         <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
             {loading ? (
                 [1, 2, 3].map(i => (
@@ -109,7 +98,6 @@ const Dashboard: React.FC = () => {
                         <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                             {session.scenario ? "Review your negotiation performance and AI feedback." : "No description available."}
                         </p>
-                        
                         <div className="absolute right-2 bottom-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                              <button
                                 onClick={(e) => confirmDelete(session.id, e)}
@@ -123,12 +111,10 @@ const Dashboard: React.FC = () => {
             )}
         </div>
       </div>
-
       <div className="lg:w-2/3 flex flex-col">
          <div className="bg-sky-500 dark:bg-sky-600 rounded-[2.5rem] p-8 md:p-12 text-white shadow-xl shadow-sky-500/20 relative overflow-hidden mb-8">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-1/3 -translate-x-1/4 blur-2xl"></div>
-            
             <div className="relative z-10">
                 <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
                     {greeting}.
@@ -136,7 +122,6 @@ const Dashboard: React.FC = () => {
                 <p className="text-sky-100 text-lg md:text-xl max-w-lg leading-relaxed mb-8 font-medium">
                     Ready to challenge your negotiation skills? Your AI counterparts are waiting for you.
                 </p>
-                
                 <Link
                     to="/setup"
                     className="inline-flex items-center gap-2 px-8 py-4 bg-white text-sky-600 rounded-2xl font-bold hover:bg-sky-50 transition-all"
@@ -145,7 +130,6 @@ const Dashboard: React.FC = () => {
                 </Link>
             </div>
          </div>
-
          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-6 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-3xl hover:border-sky-100 dark:hover:border-sky-500/20 transition-colors group cursor-pointer">
                 <div className="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -154,7 +138,6 @@ const Dashboard: React.FC = () => {
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Quick Analysis</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">View the detailed analysis of your most recent negotiation session.</p>
             </div>
-
             <div className="p-6 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-3xl hover:border-sky-100 dark:hover:border-sky-500/20 transition-colors group cursor-pointer">
                 <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <Search className="w-6 h-6" />
@@ -167,5 +150,4 @@ const Dashboard: React.FC = () => {
     </div>
   );
 };
-
 export default Dashboard;

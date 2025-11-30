@@ -4,18 +4,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 import { LoginRequest } from '../types';
 import { Loader2, BrainCircuit, ArrowRight, AlertCircle } from 'lucide-react';
-
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<LoginRequest>({
-    username: 'product_manager_1',
-    role: 'Product Manager',
-    age: 32
+    username: '',
+    role: '',
+    age: 0
   });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -37,22 +35,17 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-background dark:bg-black flex flex-col items-center justify-center p-4">
-      
-
       <div className="w-full max-w-md bg-white dark:bg-dark-surface p-10 rounded-[2rem] shadow-2xl shadow-sky-900/5 dark:shadow-none border border-slate-100 dark:border-dark-border animate-fade-in">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Access Terminal</h2>
         <p className="text-slate-500 mb-8">Enter your credentials to begin simulation.</p>
-
         {error && (
           <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 flex items-start gap-3 text-red-600 dark:text-red-400 animate-fade-in">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
             <p className="text-sm font-medium">{error}</p>
           </div>
         )}
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Username</label>
@@ -61,10 +54,10 @@ const Login: React.FC = () => {
               required
               value={formData.username}
               onChange={e => setFormData({ ...formData, username: e.target.value })}
+              placeholder="e.g. Alien"
               className="w-full px-5 py-4 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-black text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all font-medium"
             />
           </div>
-
           <div className="grid grid-cols-3 gap-4">
              <div className="col-span-2">
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Role</label>
@@ -73,6 +66,7 @@ const Login: React.FC = () => {
                   required
                   value={formData.role}
                   onChange={e => setFormData({ ...formData, role: e.target.value })}
+                  placeholder="e.g. Product Manager"
                   className="w-full px-5 py-4 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-black text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all font-medium"
                 />
              </div>
@@ -82,11 +76,11 @@ const Login: React.FC = () => {
                   type="number"
                   value={formData.age}
                   onChange={e => setFormData({ ...formData, age: parseInt(e.target.value) })}
+                  placeholder="e.g. 32"
                   className="w-full px-5 py-4 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-black text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all font-medium"
                 />
              </div>
           </div>
-
           <button
             type="submit"
             disabled={loading}
@@ -99,5 +93,4 @@ const Login: React.FC = () => {
     </div>
   );
 };
-
 export default Login;

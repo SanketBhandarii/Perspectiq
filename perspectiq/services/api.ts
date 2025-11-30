@@ -12,34 +12,26 @@ import {
   GetHistoryResponse,
   DeleteSessionResponse
 } from '../types';
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('auth_token');
-
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
-
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
   });
-
   if (!response.ok) {
     const errorBody = await response.text();
     throw new Error(`API Error: ${response.status} - ${errorBody}`);
   }
-
   return response.json();
 }
-
 export const api = {
   auth: {
     login: (data: LoginRequest) => request<LoginResponse>('/auth/login', {
