@@ -6,9 +6,15 @@ from db.database import init_db
 
 app = FastAPI(title="Perspectiq", version="1.0.0")
 
+origins = [
+    "http://localhost:3000",
+    "https://perspecti.vercel.app",
+    "https://perspecti.vercel.app/"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
