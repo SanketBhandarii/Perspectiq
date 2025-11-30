@@ -26,6 +26,12 @@ class Session(Base):
     summary = Column(Text, nullable=True)
     evaluation = Column(Text, nullable=True)
     
+    # New fields for Custom Mode
+    user_role = Column(String, nullable=True)
+    partner_role = Column(String, nullable=True)
+    user_personality = Column(Text, nullable=True)
+    partner_personality = Column(Text, nullable=True)
+    
     user = relationship("User", back_populates="sessions")
     messages = relationship("Message", back_populates="session", cascade="all, delete-orphan")
 

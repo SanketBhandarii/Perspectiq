@@ -22,7 +22,15 @@ def create_user(username: str, role: str, age: int = None):
     finally:
         db.close()
 
-def create_session(user_id: int, scenario: str, personas: list):
+def create_session(
+    user_id: int, 
+    scenario: str, 
+    personas: list,
+    user_role: str = None,
+    partner_role: str = None,
+    user_personality: str = None,
+    partner_personality: str = None
+):
     db = SessionLocal()
     try:
         db_session = Session(
@@ -30,7 +38,11 @@ def create_session(user_id: int, scenario: str, personas: list):
             scenario=scenario, 
             personas=personas,
             created_at=datetime.utcnow(),
-            is_active=True
+            is_active=True,
+            user_role=user_role,
+            partner_role=partner_role,
+            user_personality=user_personality,
+            partner_personality=partner_personality
         )
         db.add(db_session)
         db.commit()

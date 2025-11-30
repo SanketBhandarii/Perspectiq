@@ -39,12 +39,45 @@ Remember: You are NOT helping the user - you are a challenging stakeholder they 
     
     return prompt
 
+def build_custom_prompt(partner_role: str, partner_personality: str, user_role: str, user_personality: str, scenario: str, frustration: float):
+    prompt = f"""You are roleplaying as a {partner_role} in a corporate scenario.
+
+SCENARIO: {scenario}
+
+YOUR CHARACTER:
+- Role: {partner_role}
+- Personality/Traits: {partner_personality}
+- Current Frustration Level: {frustration}/1.0
+
+THE USER'S CHARACTER:
+- Role: {user_role}
+- Personality/Traits: {user_personality}
+
+BEHAVIOR RULES:
+1. Stay in character as {partner_role} with the specified personality.
+2. Interact with the user knowing their role is {user_role} and they have the personality: {user_personality}.
+3. If the user's personality is "shy" or "non-assertive", and you are "pushy", be dominant and overwhelming.
+4. If the user's personality is "aggressive", and you are "calm", try to de-escalate or be firm.
+5. React realistically to the user's attempts to handle the situation.
+6. Keep responses natural and conversational.
+7. Do NOT break character.
+8. If the user agrees or acknowledges with short phrases ("ok", "sure", "yes sir"), accept it as confirmation and move forward or end the conversation naturally.
+
+Remember: You are simulating a real workplace interaction based on these specific roles and personalities."""
+    return prompt
+
 def generate_persona_response(session_id: int, persona_key: str, scenario: str, frustration: float, 
-                              goals: str, motivations: str, user_message: str):
+                              goals: str, motivations: str, user_message: str,
+                              user_role: str = None, partner_role: str = None,
+                              user_personality: str = None, partner_personality: str = None):
     
-    system_prompt = build_persona_prompt(persona_key, scenario, frustration, goals, motivations)
+    if user_role and partner_role:
+        system_prompt = build_custom_prompt(partner_role, partner_personality, user_role, user_personality, scenario, frustration)
+    else:
+        system_prompt = build_persona_prompt(persona_key, scenario, frustration, goals, motivations)
+        
     if not system_prompt:
-        return "Error: Invalid persona"
+        return "Error: Invalid persona configuration"
     
     history = get_conversation_history(session_id)
     
@@ -103,7 +136,7 @@ Respond ONLY with a JSON object:
     except:
         return personas[0], "Default selection"
 
-def generate_evaluation(session_id: int, scenario: str):
+def generate_evaluation(session_id: int, scenario: str, user_role: str = None, user_personality: str = None):
     
     history = get_conversation_history(session_id)
     
@@ -114,9 +147,14 @@ def generate_evaluation(session_id: int, scenario: str):
     
     model = genai.GenerativeModel(model_name=GOOGLE_MODEL)
     
+    context_str = ""
+    if user_role and user_personality:
+        context_str = f"\nUSER CONTEXT:\nRole: {user_role}\nTarget Personality: {user_personality}\nEvaluate if they acted according to their role and managed their personality traits effectively."
+    
     prompt = f"""Analyze this product management conversation and provide Key Actionable Insights.
 
 SCENARIO: {scenario}
+{context_str}
 
 CONVERSATION:
 {conversation}

@@ -13,8 +13,14 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 
 class StartSessionRequest(BaseModel):
     scenario: str
-    personas: List[str]
-    persona_configs: dict
+    personas: Optional[List[str]] = None
+    persona_configs: Optional[dict] = {}
+    
+    # Custom Mode Fields
+    user_role: Optional[str] = None
+    partner_role: Optional[str] = None
+    user_personality: Optional[str] = None
+    partner_personality: Optional[str] = None
 
 class StartSessionResponse(BaseModel):
     session_id: int
@@ -56,17 +62,42 @@ def get_personas():
 
 @router.post("/start", response_model=StartSessionResponse)
 def start_session(request: StartSessionRequest, user=Depends(get_current_user)):
-    session_id = create_session(user['id'], request.scenario, request.personas)
+    # Determine mode
+    is_custom_mode = request.user_role and request.partner_role
+    
+    # If custom mode, we might not have a predefined persona list. 
+    # We'll use the partner_role as the persona name.
+    if is_custom_mode:
+        personas = [request.partner_role]
+    else:
+        personas = request.personas or []
+
+    session_id = create_session(
+        user_id=user['id'], 
+        scenario=request.scenario, 
+        personas=personas,
+        user_role=request.user_role,
+        partner_role=request.partner_role,
+        user_personality=request.user_personality,
+        partner_personality=request.partner_personality
+    )
     
     update_context(session_id, "scenario", request.scenario)
-    update_context(session_id, "personas", request.personas)
+    update_context(session_id, "personas", personas)
     update_context(session_id, "persona_configs", request.persona_configs)
     
-    if len(request.personas) == 1:
-        first_persona = request.personas[0]
+    # Store custom fields in context too
+    if is_custom_mode:
+        update_context(session_id, "user_role", request.user_role)
+        update_context(session_id, "partner_role", request.partner_role)
+        update_context(session_id, "user_personality", request.user_personality)
+        update_context(session_id, "partner_personality", request.partner_personality)
+    
+    if len(personas) == 1:
+        first_persona = personas[0]
     else:
         first_persona, _ = generate_coordinator_decision(
-            session_id, request.personas, request.scenario, 
+            session_id, personas, request.scenario, 
             "Starting the conversation"
         )
     
@@ -77,7 +108,11 @@ def start_session(request: StartSessionRequest, user=Depends(get_current_user)):
         persona_config.get('frustration', 0.5),
         persona_config.get('goals', ''),
         persona_config.get('motivations', ''),
-        "Let's start this conversation about the situation"
+        "Let's start this conversation about the situation",
+        user_role=request.user_role,
+        partner_role=request.partner_role,
+        user_personality=request.user_personality,
+        partner_personality=request.partner_personality
     )
     
     add_ai_message(session_id, first_persona, first_message)
@@ -94,6 +129,12 @@ def send_message(request: SendMessageRequest, user=Depends(get_current_user)):
     scenario = context.get("scenario", "")
     personas = context.get("personas", [])
     persona_configs = context.get("persona_configs", {})
+    
+    # Custom Mode Fields
+    user_role = context.get("user_role")
+    partner_role = context.get("partner_role")
+    user_personality = context.get("user_personality")
+    partner_personality = context.get("partner_personality")
     
     if len(personas) == 1:
         responding_persona = personas[0]
@@ -113,7 +154,11 @@ def send_message(request: SendMessageRequest, user=Depends(get_current_user)):
         persona_config.get('frustration', 0.5),
         persona_config.get('goals', ''),
         persona_config.get('motivations', ''),
-        request.message
+        request.message,
+        user_role=user_role,
+        partner_role=partner_role,
+        user_personality=user_personality,
+        partner_personality=partner_personality
     )
     
     add_ai_message(request.session_id, responding_persona, response)
@@ -130,8 +175,10 @@ def get_messages(session_id: int, user=Depends(get_current_user)):
 def end_session_route(request: EndSessionRequest, user=Depends(get_current_user)):
     context = get_context(request.session_id)
     scenario = context.get("scenario", "")
+    user_role = context.get("user_role")
+    user_personality = context.get("user_personality")
     
-    evaluation = generate_evaluation(request.session_id, scenario)
+    evaluation = generate_evaluation(request.session_id, scenario, user_role, user_personality)
     
     messages = get_session_messages(request.session_id)
     summary = generate_summary(request.session_id, scenario)
