@@ -195,7 +195,7 @@ const Summary: React.FC = () => {
            to="/setup"
            className="px-10 py-4 bg-sky-500 text-white hover:bg-sky-600 rounded-full font-bold shadow-xl shadow-sky-500/20 transition-all flex items-center gap-2 hover:-translate-y-1"
          >
-           <RefreshCcw className="w-5 h-5" /> New Simulation
+           <RefreshCcw className="w-5 h-5" /> Simulate
          </Link>
       </div>
     </div>
