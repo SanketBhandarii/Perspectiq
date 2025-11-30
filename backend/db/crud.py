@@ -39,7 +39,7 @@ def create_session(user_id: int, scenario: str, personas: list):
     finally:
         db.close()
 
-def save_message(session_id: int, persona: str, message: str):
+def save_message(session_id: int, persona: str, message: str, feedback: dict = None):
     db = SessionLocal()
     try:
         msg_type = 'human' if persona == 'User' else 'ai'
@@ -48,6 +48,7 @@ def save_message(session_id: int, persona: str, message: str):
             type=msg_type,
             content=message,
             persona=persona if msg_type == 'ai' else None,
+            feedback=feedback,
             timestamp=datetime.utcnow()
         )
         db.add(db_msg)
@@ -63,7 +64,8 @@ def get_session_messages(session_id: int):
             {
                 "role": "user" if msg.type == "human" else "assistant",
                 "content": msg.content,
-                "persona": msg.persona
+                "persona": msg.persona,
+                "feedback": msg.feedback
             }
             for msg in messages
         ]
@@ -103,6 +105,7 @@ def get_user_sessions(user_id: int):
                 "personas": s.personas,
                 "created_at": s.created_at,
                 "summary": s.summary,
+                "evaluation": s.evaluation,
                 "message_count": len(s.messages)
             })
         return results

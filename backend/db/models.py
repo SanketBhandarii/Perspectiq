@@ -37,6 +37,7 @@ class Message(Base):
     type = Column(String) # 'human' or 'ai'
     content = Column(Text)
     persona = Column(String, nullable=True) # Name of the persona if AI
+    feedback = Column(JSON, nullable=True) # Store AI coach feedback
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     session = relationship("Session", back_populates="messages")

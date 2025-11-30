@@ -8,6 +8,7 @@ app = FastAPI(title="Perspectiq", version="1.0.0")
 
 origins = [
     "http://localhost:3000",
+    "http://localhost:5173",
     "https://perspecti.vercel.app",
     "https://perspecti.vercel.app/"
 ]

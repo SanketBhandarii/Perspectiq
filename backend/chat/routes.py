@@ -6,7 +6,7 @@ from db.crud import (create_session, save_message, get_session_messages,
                      end_session, save_summary, get_user_sessions, delete_session)
 from chat.memory import (add_user_message, add_ai_message, get_conversation_history, 
                          update_context, clear_session, get_context)
-from chat.agent import generate_persona_response, generate_coordinator_decision, generate_evaluation, generate_summary
+from chat.agent import generate_persona_response, generate_coordinator_decision, generate_evaluation, generate_summary, generate_instant_feedback
 from personas.registry import get_all_personas
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -26,6 +26,7 @@ class SendMessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     persona: str
     message: str
+    feedback: Optional[dict] = None
 
 class GetMessagesResponse(BaseModel):
     messages: List[dict]
@@ -87,7 +88,6 @@ def start_session(request: StartSessionRequest, user=Depends(get_current_user)):
 @router.post("/message", response_model=MessageResponse)
 def send_message(request: SendMessageRequest, user=Depends(get_current_user)):
     add_user_message(request.session_id, request.message)
-    save_message(request.session_id, "User", request.message)
     
     context = get_context(request.session_id)
     
@@ -104,6 +104,10 @@ def send_message(request: SendMessageRequest, user=Depends(get_current_user)):
     
     persona_config = persona_configs.get(responding_persona, {})
     
+    feedback = generate_instant_feedback(request.message, scenario)
+    
+    save_message(request.session_id, "User", request.message, feedback)
+    
     response = generate_persona_response(
         request.session_id, responding_persona, scenario,
         persona_config.get('frustration', 0.5),
@@ -115,7 +119,7 @@ def send_message(request: SendMessageRequest, user=Depends(get_current_user)):
     add_ai_message(request.session_id, responding_persona, response)
     save_message(request.session_id, responding_persona, response)
     
-    return MessageResponse(persona=responding_persona, message=response)
+    return MessageResponse(persona=responding_persona, message=response, feedback=feedback)
 
 @router.get("/messages/{session_id}", response_model=GetMessagesResponse)
 def get_messages(session_id: int, user=Depends(get_current_user)):
@@ -162,6 +166,7 @@ def get_history(user=Depends(get_current_user)):
             "persona": s["personas"][0] if s["personas"] and len(s["personas"]) > 0 else "Unknown",
             "created_at": s["created_at"].isoformat() if s["created_at"] else None,
             "summary": s["summary"],
+            "evaluation": s["evaluation"],
             "message_count": s["message_count"]
         })
 

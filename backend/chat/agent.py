@@ -33,8 +33,9 @@ BEHAVIOR RULES:
 8. Keep responses natural and conversational (2-4 sentences typical)
 9. Show emotion appropriate to the situation
 10. Be a realistic corporate stakeholder, not a chatbot
+11. If the user agrees or acknowledges with short phrases ("ok", "sure", "yes sir"), accept it as confirmation and move forward or end the conversation naturally. Do NOT interpret respectful brevity as lack of confidence unless you specifically asked for detail.
 
-Remember: You are NOT helping the user - you are a challenging stakeholder they need to manage."""
+Remember: You are NOT helping the user - you are a challenging stakeholder they need to manage, but you should respond reasonably to agreement."""
     
     return prompt
 
@@ -113,26 +114,26 @@ def generate_evaluation(session_id: int, scenario: str):
     
     model = genai.GenerativeModel(model_name=GOOGLE_MODEL)
     
-    prompt = f"""Analyze this product management conversation and provide a brief evaluation.
+    prompt = f"""Analyze this product management conversation and provide Key Actionable Insights.
 
 SCENARIO: {scenario}
 
 CONVERSATION:
 {conversation}
 
-Provide a concise evaluation (3-4 sentences) covering:
-1. How well did the user handle stakeholder concerns?
-2. Communication effectiveness (tone, clarity, empathy)
-3. Key strengths shown
-4. One main area for improvement
+Provide a bulleted list of 3-5 specific, actionable insights for the user to improve their stakeholder management and communication skills. 
+Give honest advice like a friend giving feedback to another friend. Avoid corporate jargon. Be direct but conversational. Give concised insights to point, not too long.
 
-Be direct and actionable. This is practice feedback."""
+STRICT FORMATTING RULES:
+1. Start directly with the first bullet point.
+2. Output ONLY the bullet points of dots.
+3. Don't put such stars *first* """
     
     try:
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"Unable to generate evaluation: {str(e)}"
+        return f"Unable to generate insights: {str(e)}"
 
 def generate_summary(session_id: int, scenario: str):
     history = get_conversation_history(session_id)
@@ -158,3 +159,30 @@ Provide a 2-3 sentence executive summary of what happened, the key outcome, and 
         return response.text
     except Exception as e:
         return f"Summary unavailable: {str(e)}"
+
+def generate_instant_feedback(user_message: str, scenario: str):
+    model = genai.GenerativeModel(model_name=GOOGLE_MODEL)
+    
+    prompt = f"""Analyze the user's message in the context of this scenario: "{scenario}".
+    
+    User Message: "{user_message}"
+    
+    Provide:
+    1. A REALISTIC rating (1-10) on effectiveness. Do NOT default to 8. Be critical.
+       - 1-4: Poor, counterproductive, or ignores key issues.
+       - 5-7: Average, acceptable but could be better.
+       - 8-10: Excellent, strategic, and empathetic.
+    2. A 1-sentence "Coach's Tip" on SPECIFICALLY how to improve THIS message or why it was good. Avoid generic advice.
+    
+    If the message is just a short acknowledgment (e.g., "ok", "sure", "thanks"), give a score of -1 and feedback "Acknowledgment".
+    
+    Respond ONLY with a JSON object:
+    {{ "score": <int>, "feedback": "<string>" }}
+    """
+    
+    try:
+        response = model.generate_content(prompt)
+        text = response.text.strip().replace("```json", "").replace("```", "")
+        return json.loads(text)
+    except:
+        return {"score": 0, "feedback": ""}
