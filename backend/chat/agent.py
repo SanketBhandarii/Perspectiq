@@ -237,11 +237,12 @@ def generate_instant_feedback(user_message: str, scenario: str):
        - 5-7: Average, acceptable but could be better.
        - 8-10: Excellent, strategic, and empathetic.
     2. A 1-sentence "Coach's Tip" on SPECIFICALLY how to improve THIS message or why it was good. Avoid generic advice.
+    3. A "Suggested Response": Rewrite the user's message to be more effective (score 10/10). Keep it in the user's voice but apply the coaching tip.
     
     IMPORTANT: Do NOT penalize short, professional acknowledgments (e.g., "Will do", "Understood", "Okay"). In a corporate setting, brevity is often a virtue. If the user acknowledges an instruction appropriately, give a good score (8-10) and a tip like "Clear and concise confirmation."
     
     Respond ONLY with a JSON object:
-    {{ "score": <int>, "feedback": "<string>" }}
+    {{ "score": <int>, "feedback": "<string>", "suggested_response": "<string>" }}
     """
     
     try:
@@ -253,7 +254,7 @@ def generate_instant_feedback(user_message: str, scenario: str):
         )
         return json.loads(completion.choices[0].message.content)
     except Exception as e:
-        return {"score": 0, "feedback": ""}
+        return {"score": 0, "feedback": "", "suggested_response": ""}
 
 def generate_scenario(role: str, difficulty: str, user_role: str = None, partner_role: str = None):
     # If specific roles are provided, use them for a more targeted scenario

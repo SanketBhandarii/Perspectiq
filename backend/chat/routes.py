@@ -151,12 +151,18 @@ def send_message(request: SendMessageRequest, user=Depends(get_current_user)):
     user_personality = context.get("user_personality")
     partner_personality = context.get("partner_personality")
     
+    if not personas:
+        personas = ["Counterpart"]
+
     if len(personas) == 1:
         responding_persona = personas[0]
     else:
         responding_persona, reason = generate_coordinator_decision(
             request.session_id, personas, scenario, request.message
         )
+        
+    if not responding_persona:
+        responding_persona = personas[0] if personas else "Counterpart"
     
     persona_config = persona_configs.get(responding_persona, {})
     
