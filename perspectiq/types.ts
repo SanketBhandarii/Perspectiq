@@ -19,7 +19,6 @@ export interface Persona {
 
 export interface PersonasResponse {
   personas: Record<string, Persona>;
-  message: string;
 }
 
 export interface PersonaConfig {
@@ -96,4 +95,15 @@ export interface GetHistoryResponse {
 export interface DeleteSessionResponse {
   message: string;
   session_id: number;
+}
+
+export interface GenerateScenarioRequest {
+  role: string;
+  difficulty: string;
+  user_role?: string;
+  partner_role?: string;
+}
+
+export interface GenerateTranscriptSummaryRequest {
+  transcript: string;
 }

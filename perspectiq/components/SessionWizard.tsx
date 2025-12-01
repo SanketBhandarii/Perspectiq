@@ -37,9 +37,16 @@ const SessionWizard: React.FC = () => {
     const fetchPersonas = async () => {
       try {
         const res = await api.chat.getPersonas();
-        setPersonas(res.personas);
+        if (res && res.personas) {
+          setPersonas(res.personas);
+        } else {
+          setErrorMessage("Received invalid data from server.");
+          setShowError(true);
+        }
       } catch (err) {
         console.error("Failed to load personas", err);
+        setErrorMessage("Failed to load personas. Please check if the backend is running.");
+        setShowError(true);
       }
     };
     fetchPersonas();
@@ -64,7 +71,13 @@ const SessionWizard: React.FC = () => {
         setShowError(true);
         return;
       }
-      roleForScenario = personas[selectedPersonaKey].role;
+      const persona = personas[selectedPersonaKey];
+      if (!persona) {
+        setErrorMessage("Selected persona not found.");
+        setShowError(true);
+        return;
+      }
+      roleForScenario = persona.role || persona.name;
     } else {
       if (!partnerRole) {
         setErrorMessage("Please define the partner's role first.");
@@ -74,9 +87,20 @@ const SessionWizard: React.FC = () => {
       roleForScenario = partnerRole;
     }
 
+    if (!roleForScenario) {
+      setErrorMessage("Configuration error: Role is missing.");
+      setShowError(true);
+      return;
+    }
+
     setGeneratingScenario(true);
     try {
-      const generated = await generateScenario(roleForScenario, "Hard");
+      // For classic mode, user role is "User" (or generic) and partner is the persona role
+      // For custom mode, we have specific roles for both
+      const userRoleForGen = mode === 'classic' ? "User" : userRole;
+      const partnerRoleForGen = mode === 'classic' ? roleForScenario : partnerRole;
+
+      const generated = await generateScenario(roleForScenario, "Hard", userRoleForGen, partnerRoleForGen);
       setScenario(generated);
     } catch (e) {
       console.error(e);
@@ -231,11 +255,11 @@ const SessionWizard: React.FC = () => {
               <button
                 onClick={() => setMode('custom')}
                 className={`p-6 md:p-8 rounded-2xl border-2 text-left transition-all duration-300 group hover:shadow-xl ${mode === 'custom'
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-500/10 ring-1 ring-purple-500'
-                  : 'border-slate-200 dark:border-white/10 hover:border-purple-300 dark:hover:border-white/30 bg-white dark:bg-black'
+                  ? 'border-blue-500 bg-blue-500 dark:bg-blue-500/10 ring-1 ring-blue-500'
+                  : 'border-slate-200 dark:border-white/10 hover:border-blue-300 dark:hover:border-white/30 bg-white dark:bg-black'
                   }`}
               >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 ${mode === 'custom' ? 'bg-purple-500 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 ${mode === 'custom' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300'
                   }`}>
                   <Brain className="w-6 h-6" />
                 </div>
@@ -268,7 +292,7 @@ const SessionWizard: React.FC = () => {
                       {persona.name}
                     </div>
                     <div className="text-sm font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/5 px-3 py-1 rounded-full inline-block mt-2">{persona.role}</div>
-                    <p className="text-slate-400 text-sm mt-3 leading-relaxed max-w-md">{persona.description}</p>
+
                   </div>
                   <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${selectedPersonaKey === key ? 'bg-sky-500 border-sky-500 text-white' : 'border-slate-300 dark:border-white/20'
                     }`}>
@@ -381,7 +405,7 @@ const SessionWizard: React.FC = () => {
           <div className="flex-1 animate-fade-in">
             <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">Behavioral Settings</h2>
             <p className="text-slate-500 mb-8 text-lg">Tune the difficulty and hidden agendas.</p>
-            <div className="space-y-8 max-w-xl">
+            <div className="space-y-8 mx-auto max-w-xl">
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
                   <label className="text-base font-semibold text-slate-900 dark:text-white">Frustration Level</label>

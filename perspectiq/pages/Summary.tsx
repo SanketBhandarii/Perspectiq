@@ -63,7 +63,31 @@ const Summary: React.FC = () => {
         const summary = await generateSummary(transcript);
         setGeneratedSummary(summary);
 
-        await api.chat.saveSummary(Number(sessionId), summary, "Evaluation pending...");
+        // Also generate evaluation if missing
+        let evaluation = session.evaluation;
+        if (!evaluation || evaluation === "Evaluation pending...") {
+          try {
+            const evalRes = await api.chat.generateEvaluation(Number(sessionId));
+            evaluation = evalRes.evaluation;
+            setSessionData(prev => prev ? ({ ...prev, evaluation }) : null);
+          } catch (e) {
+            console.error("Failed to generate evaluation", e);
+          }
+        }
+
+        await api.chat.saveSummary(Number(sessionId), summary, evaluation || "Evaluation pending...");
+      } else if (session && (!session.evaluation || session.evaluation === "Evaluation pending...")) {
+        // If summary exists but evaluation is pending, try to generate it
+        try {
+          const evalRes = await api.chat.generateEvaluation(Number(sessionId));
+          const evaluation = evalRes.evaluation;
+          setSessionData(prev => prev ? ({ ...prev, evaluation }) : null);
+
+          // Update the saved summary with the new evaluation
+          await api.chat.saveSummary(Number(sessionId), session.summary || state?.summary || "", evaluation);
+        } catch (e) {
+          console.error("Failed to generate evaluation", e);
+        }
       }
 
     } catch (err) {
@@ -81,7 +105,7 @@ const Summary: React.FC = () => {
     return (
       <ul className="space-y-4">
         {lines.map((line, idx) => {
-          const cleanLine = line.replace(/^[\*\-•]\s*/, '').trim();
+          const cleanLine = line.replace(/^[\*\-•\.]\s*/, '').trim();
           const parts = cleanLine.split(/(\*\*.*?\*\*|\*.*?\*)/g);
 
           return (
