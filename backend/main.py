@@ -10,7 +10,9 @@ origins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "https://perspecti.vercel.app",
-    "https://perspecti.vercel.app/"
+    "https://perspecti.vercel.app/",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173"
 ]
 
 app.add_middleware(
@@ -23,12 +25,6 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup():
-    from config import GOOGLE_API_KEY
-    print(f"DEBUG: API Key loaded: {bool(GOOGLE_API_KEY)}, Length: {len(GOOGLE_API_KEY) if GOOGLE_API_KEY else 0}")
-    if GOOGLE_API_KEY:
-        print(f"DEBUG: API Key start: {GOOGLE_API_KEY[:5]}...")
-    else:
-        print("DEBUG: API Key is MISSING or EMPTY")
     init_db()
 
 app.include_router(auth_router)

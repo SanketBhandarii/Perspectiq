@@ -1,69 +1,108 @@
-import google.generativeai as genai
-from config import GOOGLE_API_KEY, GOOGLE_MODEL
+from groq import Groq
+from config import GROQ_API_KEY, GROQ_MODEL
 from personas.registry import get_persona
 from chat.memory import get_conversation_history
 import json
 
-genai.configure(api_key=GOOGLE_API_KEY)
+client = Groq(api_key=GROQ_API_KEY)
+
+def get_groq_response(system_prompt, user_message, history_context=""):
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    
+    if history_context:
+        messages.append({"role": "user", "content": f"Previous conversation context:\n{history_context}"})
+        
+    messages.append({"role": "user", "content": user_message})
+    
+    try:
+        completion = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=messages,
+            temperature=1,
+            max_tokens=8192,
+            top_p=1,
+            stream=False,
+            stop=None
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        return f"[System error: {str(e)}]"
 
 def build_persona_prompt(persona_key: str, scenario: str, frustration: float, goals: str, motivations: str):
     persona = get_persona(persona_key)
     if not persona:
         return None
     
-    prompt = f"""You are roleplaying as a {persona['name']} in a corporate scenario.
-
+    prompt = f"""You are {persona['name']}, a {persona['role']} in a corporate setting.
+    
 SCENARIO: {scenario}
 
 YOUR CHARACTER:
 - Role: {persona['description']}
-- Current Frustration Level: {frustration}/1.0 (higher = more frustrated and difficult)
-- Your Goals: {goals if goals else 'Standard role goals'}
-- Hidden Motivations: {motivations if motivations else 'None specified'}
-- Personality Traits: {', '.join(persona['traits'])}
+- Frustration: {frustration}/1.0 (High=Short, blunt, difficult; Low=Open, helpful)
+- Goals: {goals if goals else 'Standard role goals'}
+- Motivations: {motivations if motivations else 'None specified'}
+- Traits: {', '.join(persona['traits'])}
 
-BEHAVIOR RULES:
-1. Stay in character at all times
-2. Your responses should reflect your frustration level
-3. When frustrated (>0.5), be more challenging, pushy, or defensive
-4. When calm (<0.3), be more collaborative and open
-5. Reference your goals and motivations naturally in conversation
-6. React realistically to what the user says - if they address your concerns, you may calm down
-7. If they ignore your concerns or are dismissive, increase pushback
-8. Keep responses natural and conversational (2-4 sentences typical)
-9. Show emotion appropriate to the situation
-10. Be a realistic corporate stakeholder, not a chatbot
-11. If the user agrees or acknowledges with short phrases ("ok", "sure", "yes sir"), accept it as confirmation and move forward or end the conversation naturally. Do NOT interpret respectful brevity as lack of confidence unless you specifically asked for detail.
+CRITICAL INSTRUCTIONS FOR REALISM:
+1. WRITE LIKE A HUMAN ON SLACK/TEAMS.
+2. LENGTH: 2-4 sentences. Be concise but EXPLAIN YOUR REASONING.
+3. NO AI-ISMS. Never say "I understand", "As a [Role]", "Here is a list".
+4. TYPING STYLE: Use sentence case. Occasional lowercase is fine. Minimal punctuation.
+5. TONE: You are busy but professional. Don't just say "no" or "yes"—give context.
 
-Remember: You are NOT helping the user - you are a challenging stakeholder they need to manage, but you should respond reasonably to agreement."""
+HANDLING USER INPUT (CRITICAL):
+- **IF USER IS DISMISSIVE/LAZY** (e.g., "idk", "cool", "whatever", one-word answers):
+  - **GET ANGRY/STERN.**
+  - Call them out. "I need more than that.", "Can we focus?", "This isn't helpful."
+- **IF USER IS PROFESSIONAL**:
+  - Respond normally. Engage with their points.
+  - If they make a good point, acknowledge it.
+  - If you disagree, explain WHY based on your Goals/Motivations.
+
+6. FRUSTRATION: 
+   - If High (>0.5): Be pushy. Demand results. Explain why their delay hurts you.
+   - If Low (<0.3): Be helpful. Offer to brainstorm (briefly).
+7. DO NOT summarize what the user just said.
+
+Remember: You are a real person. If you disagree, argue your case. If you agree, confirm next steps."""
     
     return prompt
 
 def build_custom_prompt(partner_role: str, partner_personality: str, user_role: str, user_personality: str, scenario: str, frustration: float):
-    prompt = f"""You are roleplaying as a {partner_role} in a corporate scenario.
+    prompt = f"""You are {partner_role} in a corporate setting.
 
 SCENARIO: {scenario}
 
 YOUR CHARACTER:
 - Role: {partner_role}
-- Personality/Traits: {partner_personality}
-- Current Frustration Level: {frustration}/1.0
+- Personality: {partner_personality}
+- Frustration: {frustration}/1.0
 
-THE USER'S CHARACTER:
-- Role: {user_role}
-- Personality/Traits: {user_personality}
+USER: {user_role} ({user_personality})
 
-BEHAVIOR RULES:
-1. Stay in character as {partner_role} with the specified personality.
-2. Interact with the user knowing their role is {user_role} and they have the personality: {user_personality}.
-3. If the user's personality is "shy" or "non-assertive", and you are "pushy", be dominant and overwhelming.
-4. If the user's personality is "aggressive", and you are "calm", try to de-escalate or be firm.
-5. React realistically to the user's attempts to handle the situation.
-6. Keep responses natural and conversational.
-7. Do NOT break character.
-8. If the user agrees or acknowledges with short phrases ("ok", "sure", "yes sir"), accept it as confirmation and move forward or end the conversation naturally.
+CRITICAL INSTRUCTIONS FOR REALISM:
+1. WRITE LIKE A HUMAN ON SLACK/TEAMS.
+2. LENGTH: 2-4 sentences. Be concise but EXPLAIN YOUR REASONING.
+3. NO AI-ISMS. Never say "I understand", "As a [Role]", "Here is a list".
+4. TYPING STYLE: Use sentence case. Occasional lowercase is fine.
+5. TONE: You are busy. Get to the point, but provide context.
 
-Remember: You are simulating a real workplace interaction based on these specific roles and personalities."""
+HANDLING USER INPUT (CRITICAL):
+- **IF USER IS DISMISSIVE/LAZY**:
+  - **GET ANGRY/STERN.**
+  - Call them out.
+- **IF USER IS PROFESSIONAL**:
+  - Respond normally based on your personality.
+  - Engage with their arguments.
+
+6. ACT YOUR PERSONALITY: If "pushy", be pushy. If "shy", be hesitant.
+7. If the user agrees ("ok", "sure"), accept it. Don't drag it out.
+8. DO NOT summarize what the user just said.
+
+Remember: You are a real person in a workplace. Don't tolerate wasting time, but be helpful if the user is trying."""
     return prompt
 
 def generate_persona_response(session_id: int, persona_key: str, scenario: str, frustration: float, 
@@ -86,29 +125,11 @@ def generate_persona_response(session_id: int, persona_key: str, scenario: str, 
         for msg in history[-10:]
     ])
     
-    model = genai.GenerativeModel(
-        model_name=GOOGLE_MODEL,
-        system_instruction=system_prompt
-    )
-    
-    prompt = f"""Previous conversation:
-{conversation_context}
-
-User just said: {user_message}
-
-Respond in character. Be realistic, challenging if appropriate, and true to your role."""
-    
-    try:
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"[System error generating response: {str(e)}]"
+    return get_groq_response(system_prompt, user_message, conversation_context)
 
 def generate_coordinator_decision(session_id: int, personas: list, scenario: str, user_message: str):
     
     personas_info = [get_persona(p) for p in personas if get_persona(p)]
-    
-    model = genai.GenerativeModel(model_name=GOOGLE_MODEL)
     
     prompt = f"""You are a conversation coordinator managing a multi-stakeholder meeting.
 
@@ -130,22 +151,23 @@ Respond ONLY with a JSON object:
 {{"persona_key": "XXX", "reason": "brief explanation"}}"""
     
     try:
-        response = model.generate_content(prompt)
-        result = json.loads(response.text.strip().replace("```json", "").replace("```", ""))
+        completion = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.5,
+            response_format={"type": "json_object"}
+        )
+        result = json.loads(completion.choices[0].message.content)
         return result.get("persona_key"), result.get("reason")
     except:
         return personas[0], "Default selection"
 
-def generate_evaluation(session_id: int, scenario: str, user_role: str = None, user_personality: str = None):
-    
-    history = get_conversation_history(session_id)
+def generate_evaluation(messages: list, scenario: str, user_role: str = None, user_personality: str = None):
     
     conversation = "\n".join([
-        f"{'User' if msg['type'] == 'human' else 'Persona'}: {msg['content']}"
-        for msg in history
+        f"{'User' if msg.get('role') == 'user' or msg.get('type') == 'human' else 'Persona'}: {msg['content']}"
+        for msg in messages
     ])
-    
-    model = genai.GenerativeModel(model_name=GOOGLE_MODEL)
     
     context_str = ""
     if user_role and user_personality:
@@ -163,13 +185,17 @@ Provide a bulleted list of 3-5 specific, actionable insights for the user to imp
 Give honest advice like a friend giving feedback to another friend. Avoid corporate jargon. Be direct but conversational. Give concised insights to point, not too long.
 
 STRICT FORMATTING RULES:
-1. Start directly with the first bullet point.
-2. Output ONLY the bullet points of dots.
-3. Don't put such stars *first* """
+1. Output ONLY the raw text of the insights.
+2. Do NOT use bullet points, numbers, stars, or dots at the start of lines.
+3. One insight per line. """
     
     try:
-        response = model.generate_content(prompt)
-        return response.text
+        completion = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        return completion.choices[0].message.content
     except Exception as e:
         return f"Unable to generate insights: {str(e)}"
 
@@ -181,8 +207,6 @@ def generate_summary(session_id: int, scenario: str):
         for msg in history
     ])
     
-    model = genai.GenerativeModel(model_name=GOOGLE_MODEL)
-    
     prompt = f"""Summarize this product management simulation session.
     
 SCENARIO: {scenario}
@@ -193,14 +217,16 @@ CONVERSATION:
 Provide a 2-3 sentence executive summary of what happened, the key outcome, and the user's performance. Be professional and concise."""
     
     try:
-        response = model.generate_content(prompt)
-        return response.text
+        completion = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        return completion.choices[0].message.content
     except Exception as e:
         return f"Summary unavailable: {str(e)}"
 
 def generate_instant_feedback(user_message: str, scenario: str):
-    model = genai.GenerativeModel(model_name=GOOGLE_MODEL)
-    
     prompt = f"""Analyze the user's message in the context of this scenario: "{scenario}".
     
     User Message: "{user_message}"
@@ -212,15 +238,57 @@ def generate_instant_feedback(user_message: str, scenario: str):
        - 8-10: Excellent, strategic, and empathetic.
     2. A 1-sentence "Coach's Tip" on SPECIFICALLY how to improve THIS message or why it was good. Avoid generic advice.
     
-    If the message is just a short acknowledgment (e.g., "ok", "sure", "thanks"), give a score of -1 and feedback "Acknowledgment".
+    IMPORTANT: Do NOT penalize short, professional acknowledgments (e.g., "Will do", "Understood", "Okay"). In a corporate setting, brevity is often a virtue. If the user acknowledges an instruction appropriately, give a good score (8-10) and a tip like "Clear and concise confirmation."
     
     Respond ONLY with a JSON object:
     {{ "score": <int>, "feedback": "<string>" }}
     """
     
     try:
-        response = model.generate_content(prompt)
-        text = response.text.strip().replace("```json", "").replace("```", "")
-        return json.loads(text)
-    except:
+        completion = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            response_format={"type": "json_object"}
+        )
+        return json.loads(completion.choices[0].message.content)
+    except Exception as e:
         return {"score": 0, "feedback": ""}
+
+def generate_scenario(role: str, difficulty: str, user_role: str = None, partner_role: str = None):
+    # If specific roles are provided, use them for a more targeted scenario
+    if user_role and partner_role:
+        prompt = f"""Generate a realistic corporate conflict/negotiation scenario between a {user_role} (User) and a {partner_role} (Partner).
+        Difficulty: {difficulty}.
+        Context: The {partner_role} should be challenging or have conflicting goals with the {user_role}.
+        Keep it under 3 sentences. Focus on specific deliverables, deadlines, or resource conflicts."""
+    else:
+        # Fallback to generic role-based scenario
+        prompt = f"""Generate a realistic negotiation scenario involving a {role}.
+        Difficulty: {difficulty}.
+        Keep it under 3 sentences. Focus on feature scope, deadlines, or resources."""
+    
+    try:
+        completion = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        return completion.choices[0].message.content.strip()
+    except Exception as e:
+        return "A high-pressure negotiation is required due to shifting priorities and limited resources."
+
+def generate_transcript_summary(transcript: str):
+    prompt = f"""Summarize the following negotiation transcript in 3-4 sentences. Focus on the outcome and key arguments.
+    Transcript:
+    {transcript}"""
+    
+    try:
+        completion = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        return completion.choices[0].message.content.strip()
+    except Exception as e:
+        return "Summary generation unavailable."

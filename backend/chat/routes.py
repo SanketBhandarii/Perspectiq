@@ -6,7 +6,9 @@ from db.crud import (create_session, save_message, get_session_messages,
                      end_session, save_summary, get_user_sessions, delete_session)
 from chat.memory import (add_user_message, add_ai_message, get_conversation_history, 
                          update_context, clear_session, get_context)
-from chat.agent import generate_persona_response, generate_coordinator_decision, generate_evaluation, generate_summary, generate_instant_feedback
+from chat.agent import (generate_persona_response, generate_coordinator_decision, 
+                        generate_evaluation, generate_summary, generate_instant_feedback,
+                        generate_scenario, generate_transcript_summary)
 from personas.registry import get_all_personas
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -49,12 +51,25 @@ class SaveSummaryRequest(BaseModel):
     summary: str
     evaluation: str
 
+class GenerateEvaluationRequest(BaseModel):
+    session_id: int
+
 class DeleteSessionResponse(BaseModel):
     message: str
     session_id: int
 
 class GetPersonasResponse(BaseModel):
     personas: dict
+
+class GenerateScenarioRequest(BaseModel):
+    role: str
+    difficulty: str
+    user_role: Optional[str] = None
+    partner_role: Optional[str] = None
+
+class GenerateTranscriptSummaryRequest(BaseModel):
+    transcript: str
+
 
 @router.get("/personas", response_model=GetPersonasResponse)
 def get_personas():
@@ -178,9 +193,9 @@ def end_session_route(request: EndSessionRequest, user=Depends(get_current_user)
     user_role = context.get("user_role")
     user_personality = context.get("user_personality")
     
-    evaluation = generate_evaluation(request.session_id, scenario, user_role, user_personality)
-    
     messages = get_session_messages(request.session_id)
+    evaluation = generate_evaluation(messages, scenario, user_role, user_personality)
+    
     summary = generate_summary(request.session_id, scenario)
     
     end_session(request.session_id)
@@ -193,6 +208,18 @@ def end_session_route(request: EndSessionRequest, user=Depends(get_current_user)
 def save_summary_route(request: SaveSummaryRequest, user=Depends(get_current_user)):
     save_summary(request.session_id, request.summary, request.evaluation)
     return {"status": "success"}
+
+@router.post("/evaluate")
+def generate_evaluation_route(request: GenerateEvaluationRequest, user=Depends(get_current_user)):
+    context = get_context(request.session_id)
+    scenario = context.get("scenario", "")
+    user_role = context.get("user_role")
+    user_personality = context.get("user_personality")
+    
+    messages = get_session_messages(request.session_id)
+    evaluation = generate_evaluation(messages, scenario, user_role, user_personality)
+    
+    return {"evaluation": evaluation}
 
 @router.delete("/delete/{session_id}", response_model=DeleteSessionResponse)
 def delete_session_route(session_id: int, user=Depends(get_current_user)):
@@ -218,3 +245,12 @@ def get_history(user=Depends(get_current_user)):
         })
 
     return {"sessions": formatted}
+
+@router.post("/generate_scenario")
+def generate_scenario_route(request: GenerateScenarioRequest, user=Depends(get_current_user)):
+    scenario = generate_scenario(request.role, request.difficulty, request.user_role, request.partner_role)
+    return {"scenario": scenario}
+
+@router.post("/generate_transcript_summary")
+def generate_transcript_summary_route(request: GenerateTranscriptSummaryRequest, user=Depends(get_current_user)):
+    summary = generate_transcript_summary(request.transcript)
