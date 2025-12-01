@@ -280,8 +280,8 @@ const Summary: React.FC = () => {
                       )}
 
                       <div className={`px-6 py-4 text-[16px] leading-relaxed shadow-sm ${isUser
-                        ? 'bg-sky-500 text-white rounded-[2rem] rounded-tr-sm'
-                        : 'bg-slate-50 dark:bg-white/10 text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-white/5 rounded-[2rem] rounded-tl-sm'
+                        ? 'bg-sky-500 text-white rounded-[2rem] '
+                        : 'bg-slate-50 dark:bg-white/10 text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-white/5 rounded-[2rem] '
                         }`}>
                         {msg.content}
                       </div>

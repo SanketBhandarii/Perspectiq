@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { Message } from '../types';
 import { Send, Loader2, ArrowLeft, SendIcon, Lightbulb } from 'lucide-react';
 import Modal from './Modal';
+
 const ChatInterface: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
@@ -14,16 +15,19 @@ const ChatInterface: React.FC = () => {
   const [isEnding, setIsEnding] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   useEffect(() => {
     if (sessionId) {
       loadMessages();
     }
   }, [sessionId]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
+
   const loadMessages = async () => {
     try {
       const res = await api.chat.getMessages(Number(sessionId));
@@ -32,21 +36,26 @@ const ChatInterface: React.FC = () => {
       console.error("Failed to load history", err);
     }
   };
+
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!inputText.trim() || !sessionId || isLoading) return;
+
     const userMsg: Message = { role: 'user', content: inputText };
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setIsLoading(true);
+
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
+
     try {
       const res = await api.chat.sendMessage({
         session_id: Number(sessionId),
         message: userMsg.content
       });
+
       if (res.feedback) {
         setMessages(prev => {
           const newMessages = [...prev];
@@ -66,6 +75,7 @@ const ChatInterface: React.FC = () => {
           return newMessages;
         });
       }
+
       const botMsg: Message = {
         role: 'assistant',
         content: res.message,
@@ -78,32 +88,37 @@ const ChatInterface: React.FC = () => {
       setIsLoading(false);
     }
   };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
+
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
     e.target.style.height = 'auto';
     e.target.style.height = `${e.target.scrollHeight}px`;
   };
+
   const handleEndSession = async () => {
     setIsEndModalOpen(false);
     if (!sessionId) return;
+
     setIsEnding(true);
     try {
       const res = await api.chat.endSession({ session_id: Number(sessionId) });
       const lastAiMsg = messages.findLast(m => m.role === 'assistant');
       const personaName = lastAiMsg?.persona || "Counterpart";
+
       navigate(`/summary/${sessionId}`, {
         state: {
           summary: res.summary,
           evaluation: res.evaluation,
           messageCount: messages.length,
           persona: personaName,
-          createdAt: new Date().toISOString() 
+          createdAt: new Date().toISOString()
         }
       });
     } catch (err) {
@@ -111,6 +126,7 @@ const ChatInterface: React.FC = () => {
       setIsEnding(false);
     }
   };
+
   if (isEnding) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-6rem)] animate-fade-in">
@@ -129,6 +145,7 @@ const ChatInterface: React.FC = () => {
       </div>
     );
   }
+
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] relative">
       <Modal
@@ -144,6 +161,7 @@ const ChatInterface: React.FC = () => {
       >
         <p>Are you sure you want to end this session? You will receive a detailed performance evaluation.</p>
       </Modal>
+
       <div className="flex items-center justify-between py-4 px-2 sticky top-0 z-10 bg-slate-50 dark:bg-black">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors">
@@ -163,6 +181,7 @@ const ChatInterface: React.FC = () => {
           End Session
         </button>
       </div>
+
       <div className="flex-1 bg-white dark:bg-black border border-slate-100 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden flex flex-col">
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth">
           {messages.length === 0 && (
@@ -173,6 +192,7 @@ const ChatInterface: React.FC = () => {
               <p className="text-sm font-medium">The simulation is ready. Start speaking.</p>
             </div>
           )}
+
           {messages.map((msg, idx) => {
             const isUser = msg.role === 'user';
             return (
@@ -182,29 +202,38 @@ const ChatInterface: React.FC = () => {
                     {!isUser && msg.persona && (
                       <div className="text-xs font-bold text-sky-600 dark:text-sky-400 ml-5 mb-2">{msg.persona}</div>
                     )}
-                    <div className={`px-6 py-4 text-[16px] leading-relaxed shadow-sm ${isUser
-                      ? 'bg-sky-500 text-white rounded-[2rem] rounded-tr-sm'
-                      : 'bg-slate-50 dark:bg-white/10 text-slate-800 dark:text-slate-200 dark:border-white/5 rounded-[2rem] rounded-tl-sm'
+                    <div className={`px-6 py-3 text-[16px] leading-relaxed shadow-sm ${isUser
+                      ? 'bg-sky-500 text-white rounded-[2rem]'
+                      : 'bg-slate-50 dark:bg-white/10 text-slate-800 dark:text-slate-200 dark:border-white/5 rounded-[2rem]'
                       }`}>
                       {msg.content}
                     </div>
                   </div>
                 </div>
-                {}
+
+                {/* Coach's Tip */}
                 {isUser && msg.feedback && (
                   <div className="max-w-[85%] md:max-w-[70%] mr-2 animate-fade-in">
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-500/20 rounded-xl p-3 flex gap-3 items-start">
-                      <div className="bg-amber-100 dark:bg-amber-500/20 p-1.5 rounded-lg text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+                    <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-100 dark:border-cyan-500/20 rounded-xl p-3 flex gap-3 items-start">
+                      <div className="bg-cyan-100 dark:bg-cyan-500/20 p-1.5 rounded-lg text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5">
                         <Lightbulb className="w-4 h-4" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Coach's Tip</span>
-                          <span className="text-xs font-medium text-amber-600/70 dark:text-amber-500/70">• Score: {msg.feedback.score}/10</span>
+                          <span className="text-xs font-bold text-cyan-700 dark:text-cyan-400 uppercase tracking-wider">Coach's Tip</span>
+                          <span className="text-xs font-medium text-cyan-600/70 dark:text-cyan-500/70">• Score: {msg.feedback.score}/10</span>
                         </div>
-                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-snug">
+                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-snug mb-2">
                           {msg.feedback.feedback}
                         </p>
+                        {msg.feedback.suggested_response && (
+                          <div className="mt-2 pt-2 border-t border-cyan-200 dark:border-cyan-500/30">
+                            <span className="text-[10px] font-bold text-cyan-700 dark:text-cyan-400 uppercase tracking-wider block mb-1">Try saying:</span>
+                            <p className="text-sm italic text-slate-600 dark:text-slate-400">
+                              "{msg.feedback.suggested_response}"
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -212,6 +241,7 @@ const ChatInterface: React.FC = () => {
               </div>
             );
           })}
+
           {isLoading && (
             <div className="flex justify-start animate-fade-in">
               <div className="px-6 py-5 bg-slate-50 dark:bg-white/10 border border-slate-100 dark:border-white/5 rounded-[2rem] rounded-tl-sm">
@@ -224,6 +254,7 @@ const ChatInterface: React.FC = () => {
             </div>
           )}
         </div>
+
         <div className="p-4 md:p-6 bg-white dark:bg-black border-t border-slate-100 dark:border-white/5">
           <form onSubmit={handleSend} className="relative flex items-end gap-3">
             <textarea
@@ -250,4 +281,5 @@ const ChatInterface: React.FC = () => {
     </div>
   );
 };
+
 export default ChatInterface;

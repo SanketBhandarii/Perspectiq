@@ -52,6 +52,7 @@ export interface SendMessageResponse {
   feedback?: {
     score: number;
     feedback: string;
+    suggested_response?: string;
   };
 }
 
@@ -62,6 +63,7 @@ export interface Message {
   feedback?: {
     score: number;
     feedback: string;
+    suggested_response?: string;
   };
 }
 
