@@ -35,5 +35,6 @@ def root():
     return {"message": "Perspectiq API", "status": "running"}
 
 @app.get("/health")
+@app.head("/health")
 def health():
     return {"status": "healthy"}
