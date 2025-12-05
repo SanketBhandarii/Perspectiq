@@ -31,6 +31,7 @@ app.include_router(auth_router)
 app.include_router(chat_router)
 
 @app.get("/")
+@app.head("/")
 def root():
     return {"message": "Perspectiq API", "status": "running"}
 
