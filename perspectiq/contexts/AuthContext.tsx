@@ -15,26 +15,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!token);
   useEffect(() => {
     const storedToken = localStorage.getItem('auth_token');
-    const storedUsername = localStorage.getItem('username');
-    const storedRole = localStorage.getItem('role');
+    
     if (storedToken) {
       setToken(storedToken);
-      setIsAuthenticated(true);
-      if (storedUsername && storedRole) {
-          setUsername(storedUsername);
-          setRole(storedRole);
-      } else {
-          import('../services/api').then(({ api }) => {
-              api.auth.getMe().then(user => {
-                  setUsername(user.username);
-                  setRole(user.role);
-                  localStorage.setItem('username', user.username);
-                  localStorage.setItem('role', user.role);
-              }).catch(() => {
-                  logout();
-              });
+      // Always verify token with backend to ensure it's still valid
+      import('../services/api').then(({ api }) => {
+          api.auth.getMe().then(user => {
+              setUsername(user.username);
+              setRole(user.role);
+              setIsAuthenticated(true);
+              // Update local storage to keep it fresh
+              localStorage.setItem('username', user.username);
+              localStorage.setItem('role', user.role);
+          }).catch(() => {
+              // If token is invalid (401), logout
+              logout();
           });
-      }
+      });
     }
   }, []);
   const login = (newToken: string, userId: number, newUsername: string, newRole: string) => {
