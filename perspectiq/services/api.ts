@@ -28,17 +28,29 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  // 10 minute timeout for cold starts
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 600000);
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`API Error: ${response.status} - ${errorBody}`);
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`API Error: ${response.status} - ${errorBody}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
   }
-
-  return response.json();
 }
 
 export const api = {
