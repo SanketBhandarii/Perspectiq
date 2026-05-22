@@ -12,7 +12,7 @@ def get_groq_response(system_prompt, user_message, history_context=""):
         messages.append({"role": "system", "content": system_prompt})
     
     if history_context:
-        messages.append({"role": "user", "content": f"Previous conversation context:\n{history_context}"})
+        messages.append({"role": "user", "content": f"Context:\n{history_context}"})
         
     messages.append({"role": "user", "content": user_message})
     
@@ -21,7 +21,7 @@ def get_groq_response(system_prompt, user_message, history_context=""):
             model=GROQ_MODEL,
             messages=messages,
             temperature=1,
-            max_tokens=8192,
+            max_tokens=1024,
             top_p=1,
             stream=False,
             stop=None
@@ -122,7 +122,7 @@ def generate_persona_response(session_id: int, persona_key: str, scenario: str, 
     
     conversation_context = "\n".join([
         f"{'User' if msg['type'] == 'human' else 'You'}: {msg['content']}"
-        for msg in history[-10:]
+        for msg in history[-4:]
     ])
     
     return get_groq_response(system_prompt, user_message, conversation_context)
