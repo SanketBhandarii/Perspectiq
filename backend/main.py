@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from auth.routes import router as auth_router
 from chat.routes import router as chat_router
+from whop_auth import router as whop_router
 from db.database import init_db
 
 app = FastAPI(title="Perspectiq", version="1.0.0")
@@ -30,6 +31,7 @@ def startup():
 
 app.include_router(auth_router)
 app.include_router(chat_router)
+app.include_router(whop_router)
 
 @app.get("/")
 def root():

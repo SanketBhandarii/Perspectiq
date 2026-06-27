@@ -50,28 +50,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
 
-      // 2. If localStorage is empty/blocked, try a silent Whop iframe login
+      // 2. If localStorage is empty/blocked, try silent Whop login via credentials endpoint
       const isIframe = window.self !== window.top;
       if (isIframe) {
         try {
-          const response = await fetch('/api/auth/whop-login', {
-            method: 'POST',
+          const response = await fetch('/api/credentials', {
+            method: 'GET',
             headers: { 'Content-Type': 'application/json' }
           });
           if (response.ok) {
             const data = await response.json();
-            setToken(data.token);
-            setUsername(data.username);
-            setRole(data.role);
-            setIsAuthenticated(true);
-            try {
-              localStorage.setItem('auth_token', data.token);
-              localStorage.setItem('user_id', data.user_id.toString());
-              localStorage.setItem('username', data.username);
-              localStorage.setItem('role', data.role);
-            } catch (e) {}
-            setIsLoading(false);
-            return;
+            if (data && data.token) {
+              setToken(data.token);
+              setUsername(data.username);
+              setRole(data.role);
+              setIsAuthenticated(true);
+              try {
+                localStorage.setItem('auth_token', data.token);
+                localStorage.setItem('user_id', data.user_id.toString());
+                localStorage.setItem('username', data.username);
+                localStorage.setItem('role', data.role);
+              } catch (e) {}
+              setIsLoading(false);
+              return;
+            }
           }
         } catch (e) {
           console.log('Silent auto-login failed on reload:', e);
@@ -92,6 +94,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('username', newUsername);
       localStorage.setItem('role', newRole);
     } catch (e) {}
+    
+    // Broadcast back to the backend credentials store if inside Whop iframe
+    const isIframe = window.self !== window.top;
+    if (isIframe) {
+      fetch('/api/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: newToken, user_id: userId, username: newUsername, role: newRole })
+      }).catch(e => console.log('Failed to save whop user credentials', e));
+    }
+
     setToken(newToken);
     setUsername(newUsername);
     setRole(newRole);

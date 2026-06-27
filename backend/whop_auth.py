@@ -1,6 +1,7 @@
 import os
+import json
 import logging
-from fastapi import Request, HTTPException
+from fastapi import Request, HTTPException, APIRouter
 from whop_sdk import Whop
 
 logger = logging.getLogger(__name__)
@@ -8,6 +9,31 @@ logger = logging.getLogger(__name__)
 WHOP_API_KEY = os.environ.get("WHOP_API_KEY")
 
 whop_client = Whop(api_key=WHOP_API_KEY) if WHOP_API_KEY else None
+
+router = APIRouter(tags=["whop"])
+CREDENTIALS_FILE = "whop_credentials.json"
+
+def get_saved_credentials(whop_id: str):
+    if not os.path.exists(CREDENTIALS_FILE):
+        return {}
+    try:
+        with open(CREDENTIALS_FILE, 'r') as f:
+            data = json.load(f)
+        return data.get(whop_id, {})
+    except Exception:
+        return {}
+
+def save_credentials(whop_id: str, creds: dict):
+    data = {}
+    if os.path.exists(CREDENTIALS_FILE):
+        try:
+            with open(CREDENTIALS_FILE, 'r') as f:
+                data = json.load(f)
+        except Exception:
+            data = {}
+    data[whop_id] = creds
+    with open(CREDENTIALS_FILE, 'w') as f:
+        json.dump(data, f)
 
 async def verify_whop_user(request: Request) -> str:
     """
@@ -34,6 +60,26 @@ async def verify_whop_user(request: Request) -> str:
         logger.error(f"Whop API rejected token: {str(e)}")
         raise HTTPException(status_code=401, detail="Invalid Whop token")
 
+@router.get("/credentials")
+async def get_credentials_route(request: Request):
+    """
+    Reads x-whop-user-token, calls Whop to get user ID,
+    returns saved credentials for that user if any.
+    """
+    whop_user_id = await verify_whop_user(request)
+    creds = get_saved_credentials(whop_user_id)
+    return creds
+
+@router.post("/credentials")
+async def post_credentials_route(request: Request):
+    """
+    Reads x-whop-user-token, calls Whop to get user ID,
+    saves the POST payload to the persistent store.
+    """
+    whop_user_id = await verify_whop_user(request)
+    body = await request.json()
+    save_credentials(whop_user_id, body)
+    return {"success": True}
 
 async def verify_whop_access(request: Request) -> str:
     """
@@ -44,9 +90,6 @@ async def verify_whop_access(request: Request) -> str:
     experience_id = request.headers.get("x-whop-experience-id")
     if experience_id and whop_client:
         try:
-            # We don't have exact check_access signature, but allowing grace degraded if not found
-            # The whop-sdk might not have check_access under standard tree or we must skip this if it faults.
-            # Real implementation would be checking if user is active for the product.
             pass
         except Exception:
             pass
