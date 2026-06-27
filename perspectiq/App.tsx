@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import SessionWizard from './components/SessionWizard';
 import ChatInterface from './components/ChatInterface';
 import Summary from './pages/Summary';
+import WhopEntry from './pages/WhopEntry';
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) {
@@ -41,6 +42,8 @@ const AppRoutes = () => {
           <Summary />
         </ProtectedRoute>
       } />
+      <Route path="/experiences/:experienceId" element={<WhopEntry />} />
+      <Route path="/experiences/:experienceId/*" element={<WhopEntry />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
