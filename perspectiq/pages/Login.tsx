@@ -6,8 +6,15 @@ import { LoginRequest } from '../types';
 import { Loader2, BrainCircuit, ArrowRight, AlertCircle } from 'lucide-react';
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
+  
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<LoginRequest>({
     username: '',
