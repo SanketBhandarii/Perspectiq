@@ -23,12 +23,16 @@ async def verify_whop_user(request: Request) -> str:
     logger.info(f"Received token: {token[:20] if token else 'NONE'}...")
     logger.info(f"All headers: {dict(request.headers)}")
 
+    if not token:
+        logger.error("x-whop-user-token header is MISSING")
+        raise HTTPException(status_code=401, detail="Missing Whop user token")
+
     try:
-        # Pass request.headers exactly as the Whop SDK expects
-        result = await whop_client.verify_user_token(request.headers)
+        # Pass request.headers exactly as the Whop SDK expects (synchronous)
+        result = whop_client.verify_user_token(dict(request.headers))
         return result.user_id
     except Exception as e:
-        logger.error(f"Token verification failed: {e}")
+        logger.error(f"Token verification failed: {type(e).__name__}: {e}")
         raise HTTPException(status_code=401, detail=str(e))
 
 

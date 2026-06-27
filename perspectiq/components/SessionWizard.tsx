@@ -245,9 +245,9 @@ const SessionWizard: React.FC = () => {
                   }`}>
                   <Users className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Classic Scenarios</h3>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Pre-Made Characters</h3>
                 <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Practice with pre-configured personas like the "Angry Customer" or "Strict Manager". Best for quick practice.
+                  Talk to ready-made characters like the "Angry Customer" or "Strict Manager" for quick practice.
                 </p>
               </button>
 
@@ -263,9 +263,9 @@ const SessionWizard: React.FC = () => {
                   }`}>
                   <Brain className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Custom Simulation</h3>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Create Your Own</h3>
                 <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Define your own role and your partner's personality. Perfect for specific real-world situations you're facing.
+                  Describe exactly who you want to talk to. Perfect for preparing for a real meeting you have coming up.
                 </p>
               </button>
             </div>
@@ -484,7 +484,7 @@ const SessionWizard: React.FC = () => {
                 disabled={loading || !canProceed()}
                 className="px-6 md:px-8 py-2 md:py-3 bg-slate-900 dark:bg-white text-white dark:text-black rounded-xl font-bold shadow-lg disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95 text-sm md:text-base"
               >
-                {loading ? <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" /> : "Start Simulation"}
+                {loading ? <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" /> : "Start Chatting"}
               </button>
             )}
           </div>

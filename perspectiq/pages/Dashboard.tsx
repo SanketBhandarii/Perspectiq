@@ -137,13 +137,13 @@ const Dashboard: React.FC = () => {
                             {greeting}.
                         </h1>
                         <p className="text-sky-100 text-lg md:text-xl max-w-lg leading-relaxed mb-8 font-medium">
-                            Ready to challenge your negotiation skills? Your AI counterparts are waiting for you.
+                            Ready to practice your people skills? Pick a scenario and start chatting.
                         </p>
                         <Link
                             to="/setup"
                             className="inline-flex items-center gap-2 px-8 py-4 bg-white text-sky-600 rounded-2xl font-bold hover:bg-sky-50 transition-all"
                         >
-                            <Plus className="w-5 h-5" /> Start New Simulation
+                            <Plus className="w-5 h-5" /> Start New Chat
                         </Link>
                     </div>
                 </div>
@@ -160,7 +160,7 @@ const Dashboard: React.FC = () => {
                             <Search className="w-6 h-6" />
                         </div>
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Check Scenarios</h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Generate with ai the scenarios</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">See all the situations you can practice with.</p>
                     </div>
                 </div>
             </div>
