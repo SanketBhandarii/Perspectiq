@@ -7,21 +7,21 @@ const Landing: React.FC = () => {
       <section className="text-center py-24 px-4 max-w-5xl mx-auto animate-fade-in">
         <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 text-sm font-semibold mb-8 border border-sky-100 dark:border-sky-500/20 shadow-sm">
           <BrainCircuit className="w-4 h-4 mr-2" />
-          Practice tough conversations easily
+          Advanced Professional Coaching
         </div>
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-8 leading-tight">
-          Learn How to <br />
-          <span className="text-sky-500">Handle Tricky People</span>
+          Master Workplace <br />
+          <span className="text-sky-500">Communication</span>
         </h1>
         <p className="text-xl md:text-2xl text-slate-500 dark:text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
-          Chat with lifelike AI characters to practice difficult talks before you have them in real life. Make mistakes here so you don't make them at work. 
+          Practice challenging professional conversations in a realistic, risk-free AI environment. Develop the skills and confidence to handle demanding stakeholders effectively.
         </p>
         <div className="flex flex-col sm:flex-row gap-5 justify-center">
           <Link
             to="/dashboard"
             className="px-10 py-5 bg-slate-900 dark:bg-white text-white dark:text-black rounded-full font-bold text-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 cursor-pointer"
           >
-            Try It Now <ArrowRight className="w-5 h-5" />
+            Start Practicing <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
       </section>
@@ -30,27 +30,27 @@ const Landing: React.FC = () => {
           <div className="w-14 h-14 bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 rounded-2xl flex items-center justify-center mb-8">
             <ShieldCheck className="w-8 h-8" />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">No Pressure</h3>
+          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Risk-Free Environment</h3>
           <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-lg">
-            Test what to say to an upset boss or a grumpy teammate without ruining real relationships.
+            Test your negotiation and conflict-resolution strategies without jeopardizing real professional relationships.
           </p>
         </div>
         <div className="bg-white dark:bg-white/5 p-10 rounded-[2rem] border border-slate-100 dark:border-white/5 hover:border-indigo-100 dark:hover:border-indigo-500/20 transition-colors shadow-sm">
           <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-8">
             <MessageSquare className="w-8 h-8" />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Realistic Characters</h3>
+          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Complex AI Personas</h3>
           <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-lg">
-            The people you talk to will have their own hidden motives, get annoyed easily, and act like real humans.
+            Engage with AI counterparts that possess unique goals, specific frustration triggers, and hidden agendas.
           </p>
         </div>
         <div className="bg-white dark:bg-white/5 p-10 rounded-[2rem] border border-slate-100 dark:border-white/5 hover:border-emerald-100 dark:hover:border-emerald-500/20 transition-colors shadow-sm">
           <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mb-8">
             <BarChart3 className="w-8 h-8" />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Instant Feedback</h3>
+          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Actionable Insights</h3>
           <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-lg">
-            Find out exactly what you did wrong and get simple tips on what you should have said instead.
+            Receive comprehensive performance evaluations with specific, constructive feedback on how to improve.
           </p>
         </div>
       </section>
