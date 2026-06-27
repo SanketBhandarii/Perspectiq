@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import {
   LoginRequest,
   LoginResponse,
@@ -15,10 +17,19 @@ import {
   GenerateTranscriptSummaryRequest
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// Detect if running inside Whop's iframe
+const isWhopIframe = typeof window !== 'undefined' && window.self !== window.top;
+
+// When inside Whop iframe, use /api proxy (Vercel rewrites to Render)
+// This ensures the x-whop-user-token header is forwarded
+const API_BASE_URL = isWhopIframe
+  ? '/api'
+  : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000');
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('auth_token');
+  const experienceId = localStorage.getItem('whop_experience_id');
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
@@ -26,6 +37,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Forward the Whop experience ID if available
+  if (experienceId) {
+    headers['x-whop-experience-id'] = experienceId;
   }
 
   // 10 minute timeout for cold starts
