@@ -61,22 +61,10 @@ const WhopEntry: React.FC = () => {
   }, [experienceId, isAuthenticated, login, navigate]);
 
   if (error) {
-    return (
-      <div className="flex items-center justify-center py-20 px-4">
-        <div className="text-center px-8 py-12 bg-white dark:bg-white/5 rounded-3xl border border-slate-100 dark:border-white/10 max-w-md mx-4 animate-fade-in shadow-xl shadow-slate-200/20 dark:shadow-none">
-          <div className="w-16 h-16 bg-red-50 dark:bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-red-500 text-2xl font-bold">!</span>
-          </div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Access Denied</h2>
-          <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-            {error}
-          </p>
-          <p className="text-sm text-slate-400 dark:text-slate-500 mt-4">
-            Please make sure you have an active subscription to access PerspectiQ.
-          </p>
-        </div>
-      </div>
-    );
+    // If auth fails (e.g. they don't have a token or it's invalid),
+    // redirect them to the landing page so they can still browse the app.
+    navigate('/', { replace: true });
+    return null;
   }
 
   if (loading) {
