@@ -1,12 +1,11 @@
 from fastapi import Request, HTTPException
-from whop_sdk import Whop
+import logging
+import os
+from whop import WhopApi
 from config import WHOP_API_KEY
 
-# Initialize the Whop SDK client
-whop_client = Whop(api_key=WHOP_API_KEY) if WHOP_API_KEY else None
-
-
-import logging
+# Initialize the Whop SDK client correctly
+whop_client = WhopApi(api_key=WHOP_API_KEY) if WHOP_API_KEY else None
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -23,17 +22,14 @@ async def verify_whop_user(request: Request) -> str:
     token = request.headers.get("x-whop-user-token")
     logger.info(f"Received token: {token[:20] if token else 'NONE'}...")
     logger.info(f"All headers: {dict(request.headers)}")
-    
-    if not token:
-        raise HTTPException(status_code=401, detail="Missing Whop user token")
 
     try:
-        # Whop SDK verify_user_token expects a token string, testing token string payload
-        result = whop_client.verify_user_token(token)
+        # Pass request.headers exactly as the Whop SDK expects
+        result = await whop_client.verify_user_token(request.headers)
         return result.user_id
     except Exception as e:
-        logger.error(f"Token verification failed: {str(e)}")
-        raise HTTPException(status_code=401, detail=f"Invalid Whop user token: {str(e)}")
+        logger.error(f"Token verification failed: {e}")
+        raise HTTPException(status_code=401, detail=str(e))
 
 
 async def verify_whop_access(request: Request) -> str:
