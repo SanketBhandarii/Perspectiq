@@ -28,6 +28,15 @@ const WhopEntry: React.FC = () => {
           'Content-Type': 'application/json',
         };
 
+        const whopToken = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('whop-user-token='))
+          ?.split('=')[1];
+
+        if (whopToken) {
+          headers['x-whop-user-token'] = whopToken;
+        }
+
         if (experienceId) {
           headers['x-whop-experience-id'] = experienceId;
           localStorage.setItem('whop_experience_id', experienceId);
