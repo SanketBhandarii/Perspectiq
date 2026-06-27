@@ -11,7 +11,19 @@ import ChatInterface from './components/ChatInterface';
 import Summary from './pages/Summary';
 import WhopEntry from './pages/WhopEntry';
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-slate-100 dark:border-white/10 rounded-full"></div>
+          <div className="w-16 h-16 border-4 border-sky-500 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
