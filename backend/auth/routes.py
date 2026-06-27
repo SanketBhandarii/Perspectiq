@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from pydantic import BaseModel
@@ -68,3 +68,31 @@ async def login(request: LoginRequest):
 @router.get("/me")
 async def read_users_me(current_user: dict = Depends(get_current_user)):
     return current_user
+
+@router.post("/whop-login")
+async def whop_login(request: Request):
+    """
+    Whop iframe login endpoint.
+    Verifies the x-whop-user-token header, creates or finds the user,
+    and returns a JWT token for the existing session system.
+    """
+    from whop_auth import verify_whop_user
+
+    whop_user_id = await verify_whop_user(request)
+
+    # Use the Whop user ID as the username
+    username = f"whop_{whop_user_id}"
+    role = "user"
+
+    user = get_user_by_username(username)
+    if not user:
+        user = create_user(username, role)
+
+    access_token = create_access_token(data={"sub": user.username})
+
+    return {
+        "token": access_token,
+        "user_id": user.id,
+        "username": user.username,
+        "role": user.role
+    }
